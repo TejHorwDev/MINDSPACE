@@ -43,4 +43,12 @@ if (fs.existsSync(envFile)) {
   fs.copyFileSync(envFile, standaloneEnvFile);
 }
 
+// Ensure server binds to 0.0.0.0 for cloud platforms like Render
+const standaloneServerJs = path.join(root, ".next", "standalone", "server.js");
+if (fs.existsSync(standaloneServerJs)) {
+  let content = fs.readFileSync(standaloneServerJs, "utf8");
+  content = content.replace("const hostname = process.env.HOSTNAME || '0.0.0.0'", "const hostname = '0.0.0.0'");
+  fs.writeFileSync(standaloneServerJs, content, "utf8");
+}
+
 console.log("[MINDSPACE] Standalone static assets, db, and native binary modules synced successfully.");
