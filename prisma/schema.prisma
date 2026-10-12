@@ -3,10 +3,7 @@ generator client {
 }
 
 datasource db {
-  // SQLite for local/sandbox development.
-  // For PostgreSQL deployment: switch provider to "postgresql" and set
-  // DATABASE_URL to your Postgres connection string. Schema is compatible.
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
