@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact · Kroma Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="index.html" class="brand">KROMA.</a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="work.html">Work</a>
+      <a href="contact.html" class="active">Contact</a>
+    </div>
+  </nav>
+
+  <main class="page-content">
+    <p class="eyebrow">Get In Touch</p>
+    <h1>Start a conversation</h1>
+    <p class="lead">Tell us about your project, timeline, and goals.</p>
+    <form class="contact-form" onsubmit="event.preventDefault(); alert('Message sent!');">
+      <input type="text" placeholder="Your name" required>
+      <input type="email" placeholder="Email address" required>
+      <textarea rows="4" placeholder="How can we help?" required></textarea>
+      <button type="submit" class="btn">Send Message</button>
+    </form>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Kroma Studio. All rights reserved.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,14 @@
+import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/site-footer";
+
+export function AuthShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen flex-1 flex-col bg-background">
+      <SiteHeader authed={false} />
+      <main className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
+        <div className="w-full max-w-sm">{children}</div>
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}

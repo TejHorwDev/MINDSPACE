@@ -1,0 +1,101 @@
+<!DOCTYPE html><html><head>
+  <base href="/p/full-studio-project-5d1f33/">
+
+<script data-mindspace-runtime-guard="true">
+(function() {
+  function createSafeStorage() {
+    var store = {};
+    return {
+      getItem: function(key) {
+        var strKey = String(key);
+        return Object.prototype.hasOwnProperty.call(store, strKey) ? store[strKey] : null;
+      },
+      setItem: function(key, val) {
+        store[String(key)] = String(val);
+      },
+      removeItem: function(key) {
+        delete store[String(key)];
+      },
+      clear: function() {
+        store = {};
+      },
+      key: function(idx) {
+        var keys = Object.keys(store);
+        return keys[idx] || null;
+      },
+      get length() {
+        return Object.keys(store).length;
+      }
+    };
+  }
+
+  var safeLocal = createSafeStorage();
+  var safeSession = createSafeStorage();
+
+  var works = false;
+  try {
+    if (typeof window.localStorage !== 'undefined') {
+      window.localStorage.setItem('__ms_test__', '1');
+      window.localStorage.removeItem('__ms_test__');
+      works = true;
+    }
+  } catch (e) {
+    works = false;
+  }
+
+  if (!works) {
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        get: function() { return safeLocal; },
+        set: function() {},
+        configurable: true,
+        enumerable: true
+      });
+      Object.defineProperty(window, 'sessionStorage', {
+        get: function() { return safeSession; },
+        set: function() {},
+        configurable: true,
+        enumerable: true
+      });
+    } catch (e1) {
+      try {
+        var winProto = Object.getPrototypeOf(window);
+        if (winProto) {
+          Object.defineProperty(winProto, 'localStorage', {
+            get: function() { return safeLocal; },
+            set: function() {},
+            configurable: true,
+            enumerable: true
+          });
+          Object.defineProperty(winProto, 'sessionStorage', {
+            get: function() { return safeSession; },
+            set: function() {},
+            configurable: true,
+            enumerable: true
+          });
+        }
+      } catch (e2) {
+        try {
+          window.localStorage = safeLocal;
+          window.sessionStorage = safeSession;
+        } catch (e3) {}
+      }
+    }
+  }
+
+  // Safe document.cookie mock for opaque origins
+  try {
+    var testCookie = document.cookie;
+  } catch (cookieErr) {
+    var memCookie = "";
+    try {
+      Object.defineProperty(document, 'cookie', {
+        get: function() { return memCookie; },
+        set: function(v) { memCookie = String(v); },
+        configurable: true
+      });
+    } catch (e) {}
+  }
+})();
+</script>
+<title>Updated Client App</title><link rel="stylesheet" href="./styles.css"><script src="./app.js"></script></head><body><h1>Live Published Studio</h1></body></html>

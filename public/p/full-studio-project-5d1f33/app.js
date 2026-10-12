@@ -1,0 +1,1 @@
+window.APP_PUBLISHED = true;

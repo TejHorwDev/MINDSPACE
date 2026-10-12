@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Name — Portfolio</title>
+  <style>
+    :root {
+      --bg: oklch(0.145 0.01 260);
+      --surface: oklch(0.19 0.01 260);
+      --text: oklch(0.95 0 0);
+      --muted: oklch(0.68 0.01 260);
+      --accent: oklch(0.78 0.11 174);
+      --border: oklch(1 0 0 / 10%);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    section { max-width: 760px; margin: 0 auto; padding: 96px 24px 0; }
+    .eyebrow {
+      font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--accent); font-weight: 500;
+    }
+    h1 { font-size: clamp(34px, 6vw, 56px); line-height: 1.15; letter-spacing: -0.02em; margin-top: 12px; }
+    h2 { font-size: 26px; letter-spacing: -0.01em; margin-bottom: 20px; }
+    p.lead { color: var(--muted); font-size: 18px; max-width: 52ch; margin-top: 14px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 28px; padding: 12px 22px; border-radius: 10px;
+      background: var(--accent); color: var(--bg);
+      font-weight: 600; text-decoration: none; font-size: 15px;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px oklch(0.78 0.11 174 / 25%); }
+    .card {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 22px 24px;
+      transition: border-color 180ms ease, transform 200ms ease;
+    }
+    .card:hover { border-color: oklch(0.78 0.11 174 / 35%); transform: translateY(-3px); }
+    .card + .card { margin-top: 14px; }
+    .card h3 { font-size: 17px; }
+    .card p { color: var(--muted); font-size: 15px; margin-top: 6px; }
+    .card .tag { display: inline-block; margin-top: 12px; font-size: 12px; color: var(--accent); border: 1px solid oklch(0.78 0.11 174 / 30%); padding: 3px 10px; border-radius: 999px; }
+    footer { margin-top: 110px; padding: 28px 24px 40px; text-align: center; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn, .card { transition: none; } }
+  </style>
+</head>
+<body>
+  <!-- HERO -->
+  <section>
+    <p class="eyebrow">Portfolio</p>
+    <h1>Hi, I'm <span id="your-name">Your Name</span>.<br />I build for the web.</h1>
+    <p class="lead" id="your-tagline">
+      A student developer focused on clean, fast websites. Replace this line
+      with one sentence about what you do.
+    </p>
+    <a class="btn" href="#projects">See my work</a>
+  </section>
+
+  <!-- ABOUT -->
+  <section>
+    <p class="eyebrow">About</p>
+    <h2>A bit about me</h2>
+    <p class="lead" id="your-about">
+      Write two or three sentences here: what you study, what you love
+      building, and what you're learning right now.
+    </p>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <p class="eyebrow">Work</p>
+    <h2>Selected projects</h2>
+    <div class="card">
+      <h3>Project one</h3>
+      <p>One line on what it does and what you built it with.</p>
+      <span class="tag">HTML / CSS</span>
+    </div>
+    <div class="card">
+      <h3>Project two</h3>
+      <p>Another short description. Keep each one to a single sentence.</p>
+      <span class="tag">JavaScript</span>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section>
+    <p class="eyebrow">Contact</p>
+    <h2>Get in touch</h2>
+    <p class="lead">
+      The fastest way to reach me:
+      <a id="your-email" href="mailto:you@example.com" style="color: var(--accent);">you@example.com</a>
+    </p>
+  </section>
+
+  <footer>&copy; <span id="year"></span> Your Name</footer>
+
+  <script>
+    // Drop your details here — the page updates automatically.
+    const ME = {
+      name: "Your Name",
+      email: "you@example.com",
+    };
+    document.getElementById("your-name").textContent = ME.name.split(" ")[0] + " — actually, make this your full name";
+    document.querySelectorAll("footer span")[0].textContent = new Date().getFullYear();
+    const mailto = document.getElementById("your-email");
+    mailto.textContent = ME.email;
+    mailto.href = "mailto:" + ME.email;
+    document.title = ME.name + " — Portfolio";
+  </script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/p/test-057333/">
+
+<script data-mindspace-runtime-guard="true">
+(function() {
+  function createSafeStorage() {
+    var store = {};
+    return {
+      getItem: function(key) {
+        var strKey = String(key);
+        return Object.prototype.hasOwnProperty.call(store, strKey) ? store[strKey] : null;
+      },
+      setItem: function(key, val) {
+        store[String(key)] = String(val);
+      },
+      removeItem: function(key) {
+        delete store[String(key)];
+      },
+      clear: function() {
+        store = {};
+      },
+      key: function(idx) {
+        var keys = Object.keys(store);
+        return keys[idx] || null;
+      },
+      get length() {
+        return Object.keys(store).length;
+      }
+    };
+  }
+
+  var safeLocal = createSafeStorage();
+  var safeSession = createSafeStorage();
+
+  var works = false;
+  try {
+    if (typeof window.localStorage !== 'undefined') {
+      window.localStorage.setItem('__ms_test__', '1');
+      window.localStorage.removeItem('__ms_test__');
+      works = true;
+    }
+  } catch (e) {
+    works = false;
+  }
+
+  if (!works) {
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        get: function() { return safeLocal; },
+        set: function() {},
+        configurable: true,
+        enumerable: true
+      });
+      Object.defineProperty(window, 'sessionStorage', {
+        get: function() { return safeSession; },
+        set: function() {},
+        configurable: true,
+        enumerable: true
+      });
+    } catch (e1) {
+      try {
+        var winProto = Object.getPrototypeOf(window);
+        if (winProto) {
+          Object.defineProperty(winProto, 'localStorage', {
+            get: function() { return safeLocal; },
+            set: function() {},
+            configurable: true,
+            enumerable: true
+          });
+          Object.defineProperty(winProto, 'sessionStorage', {
+            get: function() { return safeSession; },
+            set: function() {},
+            configurable: true,
+            enumerable: true
+          });
+        }
+      } catch (e2) {
+        try {
+          window.localStorage = safeLocal;
+          window.sessionStorage = safeSession;
+        } catch (e3) {}
+      }
+    }
+  }
+
+  // Safe document.cookie mock for opaque origins
+  try {
+    var testCookie = document.cookie;
+  } catch (cookieErr) {
+    var memCookie = "";
+    try {
+      Object.defineProperty(document, 'cookie', {
+        get: function() { return memCookie; },
+        set: function(v) { memCookie = String(v); },
+        configurable: true
+      });
+    } catch (e) {}
+  }
+})();
+</script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#09090b">
+  <meta name="description" content="A creative developer building digital experiences, websites, and software.">
+  <title>Avash Sapkota — Creative Developer</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="cursor-glow" aria-hidden="true"></div>
+
+  <header class="navbar">
+    <a href="#home" class="logo">A<span>.</span></a>
+
+    <nav class="nav-links" id="navLinks">
+      <a href="#home" class="nav-link active">Home</a>
+      <a href="#about" class="nav-link">About</a>
+      <a href="#work" class="nav-link">Work</a>
+      <a href="#skills" class="nav-link">Skills</a>
+      <a href="#contact" class="nav-link">Contact</a>
+    </nav>
+
+    <a href="#contact" class="nav-cta">Let's talk <span>↗</span></a>
+
+    <button class="menu-toggle" id="menuToggle"
+      aria-label="Toggle navigation" aria-expanded="false"
+      aria-controls="navLinks">
+      <span></span><span></span>
+    </button>
+  </header>
+
+  <main>
+    <section class="hero section" id="home">
+      <div class="hero-orb orb-one"></div>
+      <div class="hero-orb orb-two"></div>
+
+      <div class="hero-content">
+        <div class="availability reveal">
+          <span class="status-dot"></span>
+          <span>CREATIVE DEVELOPER</span>
+          <span class="availability-divider">/</span>
+          <span class="muted">BUILDING WHAT'S NEXT</span>
+        </div>
+
+        <h1 class="hero-title reveal">
+          I BUILD<br>
+          <span class="outline-text">DIGITAL</span><br>
+          <span class="title-last">EXPERIENCES<span class="accent">.</span></span>
+        </h1>
+
+        <div class="hero-bottom reveal">
+          <p class="hero-description">
+            I'm Avash — a developer who turns ambitious ideas
+            into thoughtful, interactive digital experiences.
+          </p>
+          <a href="#work" class="round-link" aria-label="Explore my work">
+            <span>↓</span>
+          </a>
+        </div>
+
+        <div class="hero-index mono reveal">
+          <span>INDEPENDENT DEVELOPER</span>
+          <span>DESIGN × CODE × IDEAS</span>
+          <span>EST. 2025</span>
+        </div>
+      </div>
+
+      <div class="hero-side-label mono">SCROLL TO EXPLORE ↓</div>
+    </section>
+
+    <section class="marquee" aria-label="Areas of work">
+      <div class="marquee-track">
+        <span>WEB DEVELOPMENT <b>✳</b> CREATIVE CODING <b>✳</b>
+          INTERACTIVE DESIGN <b>✳</b> DIGITAL PRODUCTS <b>✳</b></span>
+        <span aria-hidden="true">WEB DEVELOPMENT <b>✳</b> CREATIVE CODING <b>✳</b>
+          INTERACTIVE DESIGN <b>✳</b> DIGITAL PRODUCTS <b>✳</b></span>
+      </div>
+    </section>
+
+    <section class="section about-section" id="about">
+      <div class="section-heading reveal">
+        <span class="eyebrow mono">01 / A LITTLE ABOUT ME</span>
+        <span class="heading-line"></span>
+      </div>
+
+      <div class="about-grid">
+        <h2 class="about-title reveal">
+          CURIOUS MIND.<br>
+          <span class="muted-text">BUILDER'S HEART.</span>
+        </h2>
+
+        <div class="about-copy reveal">
+          <p class="large-copy">
+            I believe the internet should be more than functional.
+            It should make you <span class="accent-text">feel something.</span>
+          </p>
+          <p class="body-copy">
+            I explore the intersection of code, technology, and
+            creativity. From expressive websites to ambitious software
+            projects, I enjoy bringing ideas to life one line at a time.
+          </p>
+          <a href="#contact" class="text-link">HAVE AN IDEA? LET'S TALK <span>↗</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section work-section" id="work">
+      <div class="section-heading reveal">
+        <span class="eyebrow mono">02 / SELECTED PROJECTS</span>
+        <span class="heading-line"></span>
+        <span class="mono muted">A FEW THINGS I'M BUILDING</span>
+      </div>
+
+      <div class="projects-grid">
+        <article class="project-card project-large reveal">
+          <div class="project-visual visual-mindspace">
+            <div class="visual-grid"></div>
+            <div class="mind-orbit orbit-a"></div>
+            <div class="mind-orbit orbit-b"></div>
+            <div class="mind-core">m<span>.</span></div>
+            <span class="visual-label mono">THINK BEYOND THE NOISE</span>
+          </div>
+          <div class="project-info">
+            <div>
+              <span class="project-number mono">PROJECT / 01</span>
+              <h3>Mindspace</h3>
+              <p>A digital space for thoughts, ideas, and clarity.</p>
+            </div>
+            <span class="project-arrow">↗</span>
+          </div>
+          <div class="project-tags"><span>WEB DESIGN</span><span>INTERACTION</span></div>
+        </article>
+
+        <article class="project-card reveal">
+          <div class="project-visual visual-luxion">
+            <div class="luxion-glow"></div>
+            <div class="luxion-ring ring-a"></div>
+            <div class="luxion-ring ring-b"></div>
+            <span class="luxion-word">LUXION</span>
+            <span class="visual-label mono">ENGINEERED FOR TOMORROW</span>
+          </div>
+          <div class="project-info">
+            <div>
+              <span class="project-number mono">PROJECT / 02</span>
+              <h3>Luxion</h3>
+              <p>A futuristic digital product concept.</p>
+            </div>
+            <span class="project-arrow">↗</span>
+          </div>
+          <div class="project-tags"><span>FRONTEND</span><span>EXPERIMENTAL</span></div>
+        </article>
+
+        <article class="project-card reveal">
+          <div class="project-visual visual-sketch">
+            <div class="sketch-window">
+              <div class="window-dots"><i></i><i></i><i></i></div>
+              <div class="sketch-art">S<span>F</span></div>
+              <div class="sketch-caption mono">IMAGE → ART</div>
+              <div class="sketch-progress"><span></span></div>
+            </div>
+            <span class="visual-label mono">CREATIVITY, COMPUTED</span>
+          </div>
+          <div class="project-info">
+            <div>
+              <span class="project-number mono">PROJECT / 03</span>
+              <h3>SketchForge</h3>
+              <p>Exploring image processing and creative tools.</p>
+            </div>
+            <span class="project-arrow">↗</span>
+          </div>
+          <div class="project-tags"><span>PYTHON</span><span>COMPUTER VISION</span></div>
+        </article>
+      </div>
+
+      <p class="project-note mono reveal">
+        SELECTED CONCEPTS & PERSONAL PROJECTS — MORE IN PROGRESS.
+      </p>
+    </section>
+
+    <section class="section skills-section" id="skills">
+      <div class="section-heading reveal">
+        <span class="eyebrow mono">03 / MY TOOLKIT</span>
+        <span class="heading-line"></span>
+      </div>
+
+      <div class="skills-intro reveal">
+        <h2>MADE WITH<br><span class="muted-text">CURIOSITY.</span></h2>
+        <p>
+          My toolkit evolves with every project.
+          These are the technologies I'm learning and using to turn
+          ideas into real things.
+        </p>
+      </div>
+
+      <div class="skills-grid">
+        <div class="skill-card reveal"><span class="skill-icon">01</span><div><h3>HTML & CSS</h3><p>Structure, styling, responsive layouts</p></div><span class="skill-mark">↗</span></div>
+        <div class="skill-card reveal"><span class="skill-icon">02</span><div><h3>JavaScript</h3><p>Interaction, logic, dynamic interfaces</p></div><span class="skill-mark">↗</span></div>
+        <div class="skill-card reveal"><span class="skill-icon">03</span><div><h3>Python</h3><p>Automation, backend, creative tools</p></div><span class="skill-mark">↗</span></div>
+        <div class="skill-card reveal"><span class="skill-icon">04</span><div><h3>C / C++</h3><p>Programming fundamentals, systems</p></div><span class="skill-mark">↗</span></div>
+        <div class="skill-card reveal"><span class="skill-icon">05</span><div><h3>UI / UX</h3><p>Visual direction, usability, details</p></div><span class="skill-mark">↗</span></div>
+        <div class="skill-card reveal"><span class="skill-icon">06</span><div><h3>AI & APIs</h3><p>Experiments, integrations, new ideas</p></div><span class="skill-mark">↗</span></div>
+      </div>
+    </section>
+
+    <section class="contact-section section" id="contact">
+      <div class="contact-glow"></div>
+      <div class="section-heading reveal">
+        <span class="eyebrow mono">04 / THE NEXT CHAPTER</span>
+        <span class="heading-line"></span>
+      </div>
+
+      <div class="contact-content reveal">
+        <span class="contact-pretitle mono">GOT SOMETHING IN MIND?</span>
+        <h2>LET'S MAKE<br><span class="outline-text">IT REAL.</span></h2>
+        <p>Have an idea, a project, or just want to connect? My inbox is open.</p>
+        <a class="contact-button" href="mailto:your@email.com">
+          START A CONVERSATION <span>↗</span>
+        </a>
+      </div>
+
+      <div class="contact-bottom">
+        <span class="mono">AVASH SAPKOTA © <span id="year"></span></span>
+        <div class="social-links">
+          <a href="https://github.com/" target="_blank" rel="noopener noreferrer">GITHUB ↗</a>
+          <a href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer">LINKEDIN ↗</a>
+          <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">INSTAGRAM ↗</a>
+        </div>
+        <a class="back-top mono" href="#home">BACK TO TOP ↑</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/p/1-ba8a8e/">
+
+<script data-mindspace-runtime-guard="true">
+(function() {
+  function createSafeStorage() {
+    var store = {};
+    return {
+      getItem: function(key) {
+        var strKey = String(key);
+        return Object.prototype.hasOwnProperty.call(store, strKey) ? store[strKey] : null;
+      },
+      setItem: function(key, val) {
+        store[String(key)] = String(val);
+      },
+      removeItem: function(key) {
+        delete store[String(key)];
+      },
+      clear: function() {
+        store = {};
+      },
+      key: function(idx) {
+        var keys = Object.keys(store);
+        return keys[idx] || null;
+      },
+      get length() {
+        return Object.keys(store).length;
+      }
+    };
+  }
+
+  var safeLocal = createSafeStorage();
+  var safeSession = createSafeStorage();
+
+  var works = false;
+  try {
+    if (typeof window.localStorage !== 'undefined') {
+      window.localStorage.setItem('__ms_test__', '1');
+      window.localStorage.removeItem('__ms_test__');
+      works = true;
+    }
+  } catch (e) {
+    works = false;
+  }
+
+  if (!works) {
+    try {
+      Object.defineProperty(window, 'localStorage', {
+        get: function() { return safeLocal; },
+        set: function() {},
+        configurable: true,
+        enumerable: true
+      });
+      Object.defineProperty(window, 'sessionStorage', {
+        get: function() { return safeSession; },
+        set: function() {},
+        configurable: true,
+        enumerable: true
+      });
+    } catch (e1) {
+      try {
+        var winProto = Object.getPrototypeOf(window);
+        if (winProto) {
+          Object.defineProperty(winProto, 'localStorage', {
+            get: function() { return safeLocal; },
+            set: function() {},
+            configurable: true,
+            enumerable: true
+          });
+          Object.defineProperty(winProto, 'sessionStorage', {
+            get: function() { return safeSession; },
+            set: function() {},
+            configurable: true,
+            enumerable: true
+          });
+        }
+      } catch (e2) {
+        try {
+          window.localStorage = safeLocal;
+          window.sessionStorage = safeSession;
+        } catch (e3) {}
+      }
+    }
+  }
+
+  // Safe document.cookie mock for opaque origins
+  try {
+    var testCookie = document.cookie;
+  } catch (cookieErr) {
+    var memCookie = "";
+    try {
+      Object.defineProperty(document, 'cookie', {
+        get: function() { return memCookie; },
+        set: function(v) { memCookie = String(v); },
+        configurable: true
+      });
+    } catch (e) {}
+  }
+})();
+</script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact · Kroma Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="index.html" class="brand">KROMA.</a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="work.html">Work</a>
+      <a href="contact.html" class="active">Contact</a>
+    </div>
+  </nav>
+
+  <main class="page-content">
+    <p class="eyebrow">Get In Touch</p>
+    <h1>Start a conversation</h1>
+    <p class="lead">Tell us about your project, timeline, and goals.</p>
+    <form class="contact-form" onsubmit="event.preventDefault(); alert('Message sent!');">
+      <input type="text" placeholder="Your name" required>
+      <input type="email" placeholder="Email address" required>
+      <textarea rows="4" placeholder="How can we help?" required></textarea>
+      <button type="submit" class="btn">Send Message</button>
+    </form>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 Kroma Studio. All rights reserved.</p>
+  </footer>
+
+<!-- MINDSPACE Report Site Widget -->
+<div id="mindspace-report-root" style="font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;">
+  <button id="mindspace-report-btn" type="button" aria-label="Report this site" style="position:fixed;bottom:10px;right:12px;z-index:2147483640;background:transparent;color:rgba(148,163,184,0.65);border:none;font-size:11px;font-weight:400;cursor:pointer;display:inline-flex;align-items:center;gap:4px;text-decoration:none;opacity:0.75;padding:4px 6px;transition:opacity 0.2s, color 0.2s;" onmouseover="this.style.opacity='1';this.style.color='#94a3b8';" onmouseout="this.style.opacity='0.75';this.style.color='rgba(148,163,184,0.65)';">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7;"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+    <span style="text-decoration:underline;text-underline-offset:2px;">Report site</span>
+  </button>
+
+  <div id="mindspace-report-modal" style="display:none;position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;box-sizing:border-box;">
+    <div style="background:#18181b;border:1px solid rgba(255,255,255,0.1);border-radius:14px;max-width:400px;width:100%;color:#fafafa;padding:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.8);position:relative;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:26px;height:26px;border-radius:6px;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;color:#ef4444;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+          </div>
+          <h3 style="margin:0;font-size:15px;font-weight:600;letter-spacing:-0.01em;">Report site</h3>
+        </div>
+        <button id="mindspace-report-close" type="button" style="background:none;border:none;color:#a1a1aa;font-size:20px;cursor:pointer;padding:4px;line-height:1;">&times;</button>
+      </div>
+
+      <p style="margin:0 0 16px 0;font-size:12px;color:#a1a1aa;line-height:1.5;">
+        Help keep the MINDSPACE community safe. Flag inappropriate content, copyright infringement, or security concerns.
+      </p>
+
+      <form id="mindspace-report-form" style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;color:#a1a1aa;margin-bottom:6px;">Reason</label>
+          <select id="mindspace-report-reason" required style="width:100%;background:#09090b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 12px;color:#fafafa;font-size:13px;outline:none;">
+            <option value="Inappropriate Content">Inappropriate / Harmful Content</option>
+            <option value="Malware or Phishing">Malware or Phishing Attempt</option>
+            <option value="Copyright Infringement">Copyright or Plagiarism</option>
+            <option value="Harassment or Abuse">Harassment, Hate Speech, or Abuse</option>
+            <option value="Other Policy Violation">Other Policy Violation</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;color:#a1a1aa;margin-bottom:6px;">Details (Optional)</label>
+          <textarea id="mindspace-report-details" rows="3" placeholder="Provide extra context to assist moderators..." style="width:100%;box-sizing:border-box;background:#09090b;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 12px;color:#fafafa;font-size:13px;outline:none;resize:vertical;"></textarea>
+        </div>
+
+        <div id="mindspace-report-msg" style="display:none;font-size:12px;padding:8px 12px;border-radius:8px;"></div>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
+          <button id="mindspace-report-cancel" type="button" style="background:transparent;color:#a1a1aa;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;">Cancel</button>
+          <button id="mindspace-report-submit" type="submit" style="background:#ef4444;color:#ffffff;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;">Submit Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var btn = document.getElementById("mindspace-report-btn");
+      var modal = document.getElementById("mindspace-report-modal");
+      var closeBtn = document.getElementById("mindspace-report-close");
+      var cancelBtn = document.getElementById("mindspace-report-cancel");
+      var form = document.getElementById("mindspace-report-form");
+      var submitBtn = document.getElementById("mindspace-report-submit");
+      var msgBox = document.getElementById("mindspace-report-msg");
+
+      if (!btn || !modal) return;
+
+      btn.addEventListener("click", function() {
+        modal.style.display = "flex";
+      });
+
+      function closeModal() {
+        modal.style.display = "none";
+        if (msgBox) msgBox.style.display = "none";
+      }
+
+      if (closeBtn) closeBtn.addEventListener("click", closeModal);
+      if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+      modal.addEventListener("click", function(e) {
+        if (e.target === modal) closeModal();
+      });
+
+      if (form) {
+        form.addEventListener("submit", function(e) {
+          e.preventDefault();
+          var reason = document.getElementById("mindspace-report-reason").value;
+          var details = document.getElementById("mindspace-report-details").value;
+
+          submitBtn.disabled = true;
+          submitBtn.innerText = "Submitting...";
+
+          fetch("/api/reports", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ slug: "1-ba8a8e", reason: reason, details: details })
+          })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Submit Report";
+            if (data.error) {
+              msgBox.style.display = "block";
+              msgBox.style.background = "rgba(239,68,68,0.12)";
+              msgBox.style.color = "#f87171";
+              msgBox.style.border = "1px solid rgba(239,68,68,0.3)";
+              msgBox.innerText = data.error;
+            } else {
+              msgBox.style.display = "block";
+              msgBox.style.background = "rgba(16,185,129,0.12)";
+              msgBox.style.color = "#34d399";
+              msgBox.style.border = "1px solid rgba(16,185,129,0.3)";
+              msgBox.innerText = "Report submitted successfully. Thank you.";
+              setTimeout(closeModal, 1800);
+            }
+          })
+          .catch(function(err) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Submit Report";
+            msgBox.style.display = "block";
+            msgBox.style.background = "rgba(239,68,68,0.12)";
+            msgBox.style.color = "#f87171";
+            msgBox.innerText = "Failed to submit report. Please try again.";
+          });
+        });
+      }
+    })();
+  </script>
+</div>
+
+</body>
+</html>

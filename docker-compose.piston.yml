@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  piston:
+    image: ghcr.io/engineer-man/piston
+    container_name: mindspace-piston
+    restart: unless-stopped
+    ports:
+      - "2000:2000"
+    privileged: true
+    tmpfs:
+      - /tmp:exec,mode=1777
+    volumes:
+      - piston_packages:/piston/packages
+    environment:
+      - PISTON_BIND_ADDRESS=0.0.0.0:2000
+      - PISTON_MAX_PROCESS_COUNT=64
+      - PISTON_MAX_OPEN_FILES=2048
+      - PISTON_MAX_FILE_SIZE=10000000
+      - PISTON_COMPILE_TIMEOUT=10000
+      - PISTON_RUN_TIMEOUT=10000
+      - PISTON_OUTPUT_MAX_SIZE=65536
+    # Strict resource bounds to prevent sandbox executions from starving Postgres / Next.js
+    cpus: 2.0
+    mem_limit: 1024m
+    mem_reservation: 256m
+    pids_limit: 128
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+volumes:
+  piston_packages:
+    name: mindspace_piston_packages

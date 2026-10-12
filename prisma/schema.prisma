@@ -1,0 +1,557 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // SQLite for local/sandbox development.
+  // For PostgreSQL deployment: switch provider to "postgresql" and set
+  // DATABASE_URL to your Postgres connection string. Schema is compatible.
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String              @id @default(cuid())
+  name                    String?
+  email                   String              @unique
+  // Null for OAuth-only accounts (e.g. Google sign-in)
+  passwordHash            String?
+  // "student" | "moderator" | "admin" — kept as a plain string for simple SQLite/portable migrations
+  role                    String              @default("student")
+  // Account Plan association (Free / Pro tier)
+  planId                  String?
+  accountPlan             AccountPlan?        @relation(fields: [planId], references: [id], onDelete: SetNull)
+  planExpiresAt           DateTime?
+  // Credit balance system (Phase 6): daily free credit determined by AccountPlan + purchased credits
+  freeCreditsBalance      Float               @default(20.00)
+  purchasedCreditsBalance Float               @default(0.00)
+  creditsResetAt          DateTime            @default(now())
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  projects                Project[]
+  creditTransactions      CreditTransaction[]
+  aiChatMessages          AiChatMessage[]
+  chatSessions            ChatSession[]
+  adminLogs               AdminActivityLog[]
+  settings                UserSettings?
+  mcpServers              UserMCPServer[]
+  purchaseRequests        PurchaseRequest[]
+  documents               Document[]
+  presentations           Presentation[]
+
+  @@index([planId])
+  @@index([role])
+  @@index([createdAt])
+}
+
+/**
+ * Public team profiles shown on /developers. Managed exclusively by admins
+ * via the admin panel; order controls display order on the listing page.
+ */
+model Developer {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  role        String
+  bio         String
+  // Optional — falls back to a generated initials avatar when absent.
+  photoUrl    String?
+  // { github?: string, linkedin?: string, instagram?: string, twitter?: string, website?: string }
+  socialLinks Json
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([order])
+}
+
+model Project {
+  id           String            @id @default(cuid())
+  ownerId      String
+  name         String
+  // "blank" | "portfolio" | "club-event" | "multi-page" — starter template
+  templateUsed String            @default("blank")
+  isPublished  Boolean           @default(false)
+  publicSlug   String?           @unique
+  publishedAt  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  owner        User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  activity     ProjectActivity[]
+  files        ProjectFile[]
+  aiChatMessages AiChatMessage[]
+  chatSessions ChatSession[]
+  reports      Report[]
+  assets       ProjectAsset[]
+
+  @@index([ownerId])
+  @@index([ownerId, updatedAt])
+  @@index([isPublished, publishedAt])
+}
+
+/**
+ * Starter files copied into a project from its template (Phase 2).
+ * Phase 3 adds the editor that reads/writes `content`.
+ */
+model ProjectFile {
+  id        String   @id @default(cuid())
+  projectId String
+  path      String
+  content   String
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, path])
+  @@index([projectId])
+}
+
+/**
+ * Binary image assets uploaded by students (Visual Editor V2 Photo Upload).
+ * Stored on disk and served through dedicated route.
+ */
+model ProjectAsset {
+  id         String   @id @default(cuid())
+  projectId  String
+  filename   String
+  storedPath String
+  mimeType   String
+  sizeBytes  Int
+  width      Int?
+  height     Int?
+  createdAt  DateTime @default(now())
+
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// Lightweight per-project activity log (single-owner groundwork for later
+// team features): every create/rename action gets a timestamped entry.
+model ProjectActivity {
+  id        String   @id @default(cuid())
+  projectId String
+  // "created" | "renamed"
+  action    String
+  // Extra context, e.g. the new name after a rename
+  detail    String?
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+}
+
+/**
+ * Extensible template catalog. Built-in starter templates are seeded, and admins
+ * can create, edit, and delete templates directly from the admin panel.
+ */
+model Template {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  category    String   // "portfolio" | "landing" | "multi-page" | "club" | "creative" | "business"
+  tags        String   @default("") // comma-separated keywords for search
+  icon        String?  // e.g. "Sparkles", "User", "Layers", "Rocket", "LayoutTemplate", "Palette"
+  isFeatured  Boolean  @default(false)
+  isCustom    Boolean  @default(true)
+  fileCount   Int      @default(1)
+  // Json storing array of { path: string, content: string }
+  files       Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isFeatured])
+}
+
+/**
+ * Phase 6 — Audit trail for every single credit balance change.
+ * Types: "ai_usage" | "purchase" | "admin_grant" | "daily_reset"
+ */
+model CreditTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float    // e.g. -0.0014 for ai_usage, +20.00 for daily_reset, +10.00 for admin_grant
+  type      String   // "ai_usage" | "purchase" | "admin_grant" | "daily_reset"
+  reason    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([type])
+}
+
+/**
+ * Phase 6 — Purchase Contact Channels (Discord, WhatsApp, etc.).
+ * Displayed on /credits and in the out-of-credits modal; managed from /admin.
+ */
+model ContactChannel {
+  id           String   @id @default(cuid())
+  name         String   // e.g. "Discord", "WhatsApp"
+  iconType     String   // e.g. "discord", "whatsapp", "message-circle"
+  contactLink  String   // Real invite link or wa.me URL
+  instructions String   // Short text guidance
+  active       Boolean  @default(true)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([active, displayOrder])
+}
+
+/**
+ * Phase 6 — Credit pricing tiers (managed from /admin).
+ */
+model CreditPlan {
+  id                String   @id @default(cuid())
+  name              String   // e.g. "Starter Boost", "Pro Creator Pack"
+  priceNPR          Int      // Price in Nepalese Rupees (e.g. 500)
+  creditsGrantedUSD Float    // Credits granted in USD (e.g. 10.00)
+  active            Boolean  @default(true)
+  displayOrder      Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  purchaseRequests  PurchaseRequest[]
+
+  @@index([active, displayOrder])
+}
+
+/**
+ * Phase 6 — AI Chat conversation messages per project session.
+ */
+model AiChatMessage {
+  id           String   @id @default(cuid())
+  projectId    String
+  userId       String
+  chatSessionId String?
+  role         String   // "user" | "assistant" | "system"
+  content      String
+  // Structured file diff proposals: [{ path: string, originalContent: string, proposedContent: string, status: "pending" | "applied" | "rejected" }]
+  diffs        Json?
+  inputTokens  Int?
+  outputTokens Int?
+  costUSD      Float?
+  providerId   String?
+  providerName String?
+  createdAt    DateTime @default(now())
+
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatSession ChatSession? @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@index([userId])
+  @@index([chatSessionId])
+  @@index([providerId])
+}
+
+/**
+ * Phase 6 Enhancement — AI Providers (Gemini Flash, Groq Llama, GPT-4o Mini).
+ * Managed by admin, selectable by student in chat panel.
+ */
+model AiProvider {
+  id                  String   @id @default(cuid())
+  name                String   // e.g. "Gemini Flash", "Groq Llama", "GPT-4o Mini", "Llama 3.3 70B (NVIDIA)"
+  modelKey            String   // e.g. "gemini-2.0-flash", "llama-3.3-70b-versatile", "meta/llama-3.3-70b-instruct"
+  provider            String   // "google" | "groq" | "openai" | "nvidia" | "custom"
+  baseUrl             String?  // e.g. "https://integrate.api.nvidia.com/v1" or custom OpenAI-compatible endpoint
+  apiKey              String?
+  notes               String?  // Admin notes, e.g. pricing, free tier quota, RPM limits
+  active              Boolean  @default(true)
+  priority            Int      @default(0) // Lower number = higher fallback priority
+  inputCostPerMillion Float    @default(0.075)
+  outputCostPerMillion Float   @default(0.30)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([active, priority])
+}
+
+/**
+ * Docs Studio (Phase 3) — Web Search Providers (Tavily, SerpAPI, Bing Search).
+ * Managed by admin in /admin -> Search Providers.
+ * Powers verifiable real-world web research with zero hallucinations.
+ */
+model SearchProvider {
+  id                  String   @id @default(cuid())
+  name                String   // e.g. "Tavily AI Search", "SerpAPI Google", "Bing Web Search"
+  provider            String   // "tavily" | "serpapi" | "bing" | "custom"
+  apiKey              String?  // API key for the search service
+  baseUrl             String?  // Optional custom endpoint override
+  active              Boolean  @default(true)
+  priority            Int      @default(0) // Lower number = higher fallback priority
+  searchDepth         String   @default("basic") // "basic" | "advanced"
+  maxResults          Int      @default(5)
+  notes               String?  // Admin notes, e.g. quota, tier limits
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([active, priority])
+}
+
+/**
+ * Global Admin System Settings (Daily request limits, rate limits, governance).
+ */
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+/**
+ * Per-user IDE preferences, AI configuration, and encrypted BYOK credentials.
+ */
+model UserSettings {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Editor preferences
+  editorTheme      String   @default("vs-dark") // "vs-dark" | "vs" | "hc-black" | "github-dark" | "one-dark-pro"
+  fontSize         Int      @default(14)
+  tabSize          Int      @default(2)
+  wordWrap         Boolean  @default(true)
+  minimap          Boolean  @default(false)
+
+  // AI preferences
+  aiAutoApprove    Boolean  @default(false)
+  aiDefaultModelId String?
+
+  // BYOK (Bring-Your-Own-Key) encrypted keys
+  byokGoogleKey    String?
+  byokGroqKey      String?
+  byokOpenaiKey    String?
+  byokNvidiaKey    String?
+
+  // MCP security trust warning modal state
+  hasSeenMcpTrustWarning Boolean @default(false)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+/**
+ * Flagged reports submitted on published projects (/p/[slug]).
+ * Reviewed and resolved/dismissed by admins in /admin -> Reports.
+ */
+model Report {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reason    String   // "inappropriate_content" | "copyright_infringement" | "phishing_or_malware" | "spam" | "other"
+  details   String?
+  status    String   @default("pending") // "pending" | "resolved" | "dismissed"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, status])
+  @@index([status, createdAt])
+}
+
+/**
+ * Model Context Protocol (MCP) external server connections per student.
+ * Encrypted authentication tokens at rest. Strictly isolated per student.
+ */
+model UserMCPServer {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  url       String
+  authToken String?  // Encrypted via AES-256-GCM
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, active])
+}
+
+/**
+ * Account Plans (Free vs Paid Tiers): Defines daily free credit resets,
+ * project limits, and storage quotas. Users belong to exactly one plan.
+ */
+model AccountPlan {
+  id                 String   @id @default(cuid())
+  name               String   @unique // e.g. "Free", "Pro"
+  priceNPR           Int      @default(0) // Price in Nepalese Rupees (e.g. 1500 for Pro, 0 for Free)
+  dailyFreeCreditUSD Float    @default(20.00)
+  maxProjects        Int      @default(5)
+  maxStorageMB       Int      @default(50)
+  isDefault          Boolean  @default(false) // Given to new signups automatically
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  users              User[]
+  purchaseRequests   PurchaseRequest[]
+
+  @@index([active, isDefault])
+}
+
+/**
+ * Multi-chat sessions per project. Each project can have multiple independent
+ * conversation sessions, while credits always draw from user account balance.
+ */
+model ChatSession {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  title     String   @default("New Chat")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  AiChatMessage[]
+
+  @@index([projectId, createdAt])
+  @@index([userId])
+}
+
+/**
+ * Audit trail for administrative and moderator actions.
+ */
+model AdminActivityLog {
+  id          String   @id @default(cuid())
+  adminUserId String
+  action      String   // e.g. "plan_changed", "credit_granted", "role_changed", "provider_edited", "report_resolved", etc.
+  targetType  String   // "user" | "project" | "account_plan" | "credit_plan" | "ai_provider" | "report" | "backup"
+  targetId    String?
+  details     Json?
+  createdAt   DateTime @default(now())
+
+  adminUser   User     @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId])
+}
+
+/**
+ * Purchase Requests: Structured, trackable requests for Account Plan upgrades (e.g. Pro tier)
+ * or Credit Top-Up packs. Students submit requests on /upgrade or /credits; admins review and
+ * approve/reject from /admin -> Purchase Requests.
+ */
+model PurchaseRequest {
+  id              String       @id @default(cuid())
+  userId          String
+  // "plan_upgrade" | "credit_topup"
+  type            String
+  // For "plan_upgrade": ID of requested AccountPlan
+  targetPlanId    String?
+  targetPlan      AccountPlan? @relation(fields: [targetPlanId], references: [id], onDelete: SetNull)
+  // For "credit_topup": ID of requested CreditPlan
+  creditPlanId    String?
+  creditPlan      CreditPlan?  @relation(fields: [creditPlanId], references: [id], onDelete: SetNull)
+  // Snapshot info for fast display & historical integrity
+  planName        String?      // e.g. "Pro Tier", "$100 Credit Top-Up"
+  amountUSD       Float?       // e.g. 50.00 or 100.00
+  priceNPR        Int?         // e.g. 1500 or 12000
+  // "pending" | "approved" | "rejected"
+  status          String       @default("pending")
+  // Student optional notes or contact handle (Discord username, WhatsApp number)
+  contactHandle   String?
+  notes           String?
+  // Admin review details
+  reviewedById    String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@index([type, status])
+  @@index([targetPlanId])
+  @@index([creditPlanId])
+}
+
+/**
+ * Docs & Presentation Studio (Phase 1)
+ * Rich text documents stored in Tiptap native JSON format.
+ */
+model Document {
+  id          String   @id @default(cuid())
+  ownerId     String
+  title       String   @default("Untitled Document")
+  contentJson Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  sources     Source[]
+
+  @@index([ownerId])
+  @@index([ownerId, updatedAt])
+}
+
+/**
+ * Docs Studio (Phase 2): Citations & Source Management
+ * Sources scoped per document for citation insertion and APA bibliography generation.
+ */
+model Source {
+  id            String   @id @default(cuid())
+  documentId    String
+  title         String
+  authors       String?
+  url           String?
+  publisher     String?
+  publishedDate String?
+  accessedDate  String?
+  // "website" | "book" | "journal" | "other"
+  sourceType    String   @default("website")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([documentId, createdAt])
+}
+
+
+/**
+ * Presentation Studio (Phase 1): Base Slide Deck & Slide Models
+ */
+model Presentation {
+  id        String   @id @default(cuid())
+  ownerId   String
+  title     String   @default("Untitled Presentation")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  slides    Slide[]
+
+  @@index([ownerId])
+  @@index([ownerId, updatedAt])
+}
+
+model Slide {
+  id             String       @id @default(cuid())
+  presentationId String
+  order          Int
+  // "title" | "title-content" | "two-column" | "image-text"
+  layoutType     String       @default("title")
+  contentJson    Json
+  speakerNotes   String       @default("")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+
+  @@index([presentationId])
+  @@index([presentationId, order])
+}
+
+
+
