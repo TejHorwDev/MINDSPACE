@@ -36,9 +36,11 @@ const sharpModule = path.join(root, "node_modules", "sharp");
 const standaloneSharpModule = path.join(root, ".next", "standalone", "node_modules", "sharp");
 copyRecursive(sharpModule, standaloneSharpModule);
 
-// Sync prisma db directory
-const prismaDb = path.join(root, "prisma", "db");
-const standalonePrismaDb = path.join(root, ".next", "standalone", "prisma", "db");
-copyRecursive(prismaDb, standalonePrismaDb);
+// Sync .env file if present
+const envFile = path.join(root, ".env");
+const standaloneEnvFile = path.join(root, ".next", "standalone", ".env");
+if (fs.existsSync(envFile)) {
+  fs.copyFileSync(envFile, standaloneEnvFile);
+}
 
 console.log("[MINDSPACE] Standalone static assets, db, and native binary modules synced successfully.");
